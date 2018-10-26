@@ -1,0 +1,94 @@
+DEFDAT ethernet_streaming
+EXTERNAL DECLARATIONS
+;FOLD Declare and instantiate streaming variables
+
+; Status of network operations
+DECL EKI_STATUS RET
+
+; Array of positions received from network
+DECL E6POS RING_BUFFER[10]
+
+; Used for PTP Axis movements : received axis position must be kinematically
+; transformed to an cartesian position, so it can be stored in the RING_BUFFER
+DECL E6POS FORWARD_TARGET
+DECL E6AXIS FORWARD_SOURCE
+
+; Array of raw bytes received from network. Variables are pulled from this 
+; using CAST_FROM
+CHAR BYTES_INPUT[28]
+CHAR BYTES_STATUS[5]
+
+; Array of raw bytes to send to tool or program server through network. 
+CHAR BYTES_OUTPUT[5]
+
+; Streaming command received from network. Also put into an integer to make
+; the switch statement work, may revise in future
+CHAR COMMAND = 0
+INT SWITCH_COMMAND = 0
+
+; Tool command received from network, sent along to tool
+CHAR OUTPUT_COMMAND = 0
+
+; Streaming command data received from network. R1-6 usually map to XYZABC or 
+; A1-6, but can used for other commands as well. C1 and C2 map to S and T
+REAL R1 = 0
+REAL R2 = 0
+REAL R3 = 0
+REAL R4 = 0
+REAL R5 = 0
+REAL R6 = 0
+CHAR C1 = 0
+CHAR C2 = 0
+
+; Control for the main while loop
+BOOL LOOPING = TRUE
+
+; Program counter, current command number in streamed program
+INT PC = 0
+
+; Ring counter. Current position in RING_BUFFER
+INT RC = 0
+
+; How many commands are streamed at a time
+INT CHUNK_SIZE = 100
+
+
+; Helper for CAST_FROM and CAST_TO
+CONST INT OFFSET = 0
+
+; Helper for loops
+INT i = 0
+
+; Helper for FORWARD
+INT ERROR_CODE = 0
+
+;ENDFOLD
+
+;FOLD Fill io and movement arrays
+FOR i = 1 to 28
+BYTES_INPUT[i] = 0
+ENDFOR
+FOR i = 1 to 5
+BYTES_OUTPUT[i] = 0
+ENDFOR
+FOR i = 1 to 5
+BYTES_STATUS[i] = 0
+ENDFOR
+FOR i = 1 to 10
+RING_BUFFER[i] = {X 0, Y 0, Z 0, A 0, B 0, C 0}
+ENDFOR
+;ENDFOLD
+
+;FOLD Declare command names
+INT CMD_START = 0
+INT CMD_LIN = 1
+INT CMD_PTP_POS = 2
+INT CMD_PTP_AXIS = 3
+INT CMD_CIRC = 4
+INT CMD_SPL = 5
+INT CMD_HALT = 6
+INT CMD_WAIT = 7
+INT CMD_TOOL_COMMAND = 8
+INT CMD_END = 16
+;ENDFOLD
+ENDDAT 
