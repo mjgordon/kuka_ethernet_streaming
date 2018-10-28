@@ -1,5 +1,3 @@
-
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.nio.ByteBuffer;
@@ -14,50 +12,62 @@ import processing.net.*;
 
 SDrop drop;
 
-int fileLength = 0;
 ArrayList<String> lines = new ArrayList<String>();
 
 private final String startString = ";STREAM_START";
 private final String endString = ";STREAM_END";
 
-Pattern curlyBracePattern = Pattern.compile("\\{([^}]+)\\}");
-Pattern E6POSPattern = Pattern.compile("{E6POS:");
+Pattern curlyBracePattern = Pattern.compile("\\{(.*?)\\}");
+Pattern parenPattern = Pattern.compile("\\((.*?)\\)");
+Pattern E6POSPattern = Pattern.compile("E6POS: ");
+Pattern E6AXISPattern = Pattern.compile("E6AXIS: ");
 
 ArrayList<ByteBuffer> messages = new ArrayList<ByteBuffer>();
+
+private final int gutter = 12;
 
 TextBox textStatus;
 TextBox textProgram;
 TextBox textMessages;
 
-byte CMD_LIN = 0;
-byte CMD_PTP = 1;
-byte CMD_TOOL_COMMAND = 2;
-byte CMD_HALT = 3;
-byte CMD_WAIT = 4;
+Button resetButton;
 
-private final int gutter = 12;
+private int messageSize = 28;
 
 int streamStart = 0;
 int streamEnd = 0;
 
+int PC = 0;
+
+PFont font;
+
+HashMap<Integer,Integer> pcMap = new HashMap<Integer,Integer>();
+HashMap<Integer,Integer> lineMap = new HashMap<Integer,Integer>();
+
 public void setup() {
-  size(1280,800);
+  size(1600,900);
   drop = new SDrop(this);
   setupTextBoxes();
+  resetButton = new Button("RESET", width - (60 + gutter), gutter, 60, 60);
+  setupServer();
 }
 
 public void draw() {
   background(0);
-  
+
+  updateServer();
   textStatus.drawTextBox(false);
   textProgram.drawTextBox(true);
   textMessages.drawTextBox(true);
-
+  resetButton.drawButton();
 }
 
+public void mousePressed() {
+  resetButton.pick(mouseX, mouseY);
+}
 
 public void mouseWheel(MouseEvent event) {
-   int d = event.getCount();
-   textProgram.scroll(d);
-   textMessages.scroll(d);
+  int d = event.getCount();
+  textProgram.scroll(d);
+  textMessages.scroll(d);
 }

@@ -4,7 +4,6 @@ void dropEvent(DropEvent theDropEvent) {
       Path path = file.toPath();
       try {
         lines = new ArrayList<String>(Files.readAllLines(path));
-        fileLength = lines.size();
         parse();
         setStatusText();
       }
